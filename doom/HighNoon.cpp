@@ -3,10 +3,10 @@
 #include<stdlib.h>
 #include<time.h>
 
-SceneID startScene, instruction, hollywood, hanamura, volskaya;
-ObjectID startButton, title , playButton, ok, deadeye, hand, reload, trooper[3], bas[2], ori;
-SoundID startBGM, hollywoodBGM, volskayaBGM, hanamuraBGM , gunshot, kill;
-TimerID timer1, spawnTimer;
+SceneID startScene, instruction, hollywood, hanamura, volskaya, victory, defeat;
+ObjectID startButton, title , playButton, ok, deadeye, hand, reload, trooper[3], bas[2], ori, retry;
+SoundID startBGM, hollywoodBGM, volskayaBGM, hanamuraBGM , gunshot, kill, ready;
+TimerID timer1, timer2;
 
 int trooperHP[3] = { 1, 1, 1 }, basHP[2] = { 2, 2 }, oriHP = 3, meter = 0, ammo = 6, killed = 0, i = 0, stage = 1;
 bool gunVisible = false, spawn = false;
@@ -28,6 +28,12 @@ SoundID BGM(const char* mp3, bool play) {
 		playSound(sound);
 	}
 	return sound;
+}
+
+void highNoon() {
+	BGM("Sound/highNoon.mp3", true);
+	timer2 = createTimer(7.0f);
+	startTimer(timer2);
 }
 
 bool stage_end() {
@@ -64,6 +70,7 @@ void set_stage(SceneID scene, SoundID bgm, const char* mp3, float time) {
 }
 
 void reset() {
+	stage++;
 	killed = 0;
 	for (i = 0; i < 3; i++) {
 		trooperHP[i] = 1;
@@ -77,7 +84,7 @@ void reset() {
 void game(bool clear) {
 	if (clear) {
 		if (stage == 1) {
-			killed = 0;
+			reset();
 			stopSound(startBGM);
 			set_stage(hollywood, hollywoodBGM, "Sound/hollywoodBGM.mp3", 20.0f);
 		}
@@ -91,7 +98,12 @@ void game(bool clear) {
 			stopSound(hanamuraBGM);
 			set_stage(volskaya, volskayaBGM, "Sound/volskayaBGM.mp3", 12.0f);
 		}
-		stage++;
+		else if (stage == 4) {
+			stopTimer(timer1);
+			victory = createScene("승리", "victory.png");
+			enterScene(victory);
+			BGM("Sound/victoryBGM.mp3", true);
+		}
 	}
 }
 
@@ -102,6 +114,13 @@ void hit(int HP, ObjectID enemy) {
 		playSound(kill);
 		meter++;
 		killed++;
+		if (meter >= 13) {
+			deadeye = createObject("Images/deadeye.png", hollywood, 540, 10, true);
+			deadeye = createObject("Images/deadeye.png", hanamura, 540, 10, true);
+			deadeye = createObject("Images/deadeye.png", volskaya, 540, 10, true);
+			ready = createSound("Sound/ready.mp3");
+			playSound(ready);
+		}
 	}
 }
 
@@ -114,6 +133,9 @@ void mouseCallback(ObjectID object, int x, int y, MouseAction action) {
 	}
 	else if (object == reload) {
 		ammo = 6;
+	}
+	else if (object == deadeye) {
+		highNoon();
 	}
 	else if (gunVisible && ammo > 0) {
 		gunshot = createSound("Sound/gunshot.mp3");
@@ -145,10 +167,25 @@ void mouseCallback(ObjectID object, int x, int y, MouseAction action) {
 		}
 		game(stage_end());
 	}
+	else if (object == retry) {
+		meter = 0;
+		stage = 1;
+		game(true);
+		stopSound(defeat);
+	}
 }
 
 void timerCallback(TimerID timer) {
-	
+	if (timer == timer1) {
+		gunVisible = false;
+		defeat = createScene("패배", "defeat.png");
+		enterScene(defeat);
+		BGM("Sound/defeatBGM.mp3", true);
+		retry = createObject("Images/retry.png", defeat, 550, 200, true);
+	}
+	if (timer == timer2) {
+		game(true);
+	}
 }
 
 int main() {
