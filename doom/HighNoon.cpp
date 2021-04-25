@@ -8,7 +8,7 @@ ObjectID startButton, title , playButton, ok, deadeye, hand, reload, trooper[3],
 SoundID startBGM, hollywoodBGM, volskayaBGM, hanamuraBGM , gunshot, kill;
 TimerID timer1, spawnTimer;
 
-int trooperHP[3] = { 1, 1, 1 }, basX[2], basHP[2] = { 2, 2 }, oriHP = 3, meter = 0, ammo = 6, killed = 0, i = 0, stage = 1;
+int trooperHP[3] = { 1, 1, 1 }, basHP[2] = { 2, 2 }, oriHP = 3, meter = 0, ammo = 6, killed = 0, i = 0, stage = 1;
 bool gunVisible = false, spawn = false;
 
 ObjectID createObject(const char* image, SceneID scene, int x, int y, bool shown) {
@@ -63,6 +63,17 @@ void set_stage(SceneID scene, SoundID bgm, const char* mp3, float time) {
 	start_stage(scene);
 }
 
+void reset() {
+	killed = 0;
+	for (i = 0; i < 3; i++) {
+		trooperHP[i] = 1;
+	}
+	for (i = 0; i < 2; i++) {
+		basHP[i] = 2;
+	}
+	oriHP = 3;
+}
+
 void game(bool clear) {
 	if (clear) {
 		if (stage == 1) {
@@ -71,12 +82,12 @@ void game(bool clear) {
 			set_stage(hollywood, hollywoodBGM, "Sound/hollywoodBGM.mp3", 20.0f);
 		}
 		else if (stage == 2) {
-			killed = 0;
+			reset();
 			stopSound(hollywoodBGM);
 			set_stage(hanamura, hanamuraBGM, "Sound/hanamuraBGM.mp3", 16.0f);
 		}
 		else if (stage == 3) {
-			killed = 0;
+			reset();
 			stopSound(hanamuraBGM);
 			set_stage(volskaya, volskayaBGM, "Sound/volskayaBGM.mp3", 12.0f);
 		}
